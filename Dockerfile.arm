@@ -38,6 +38,24 @@ RUN GOOS=linux GOARCH=arm GOARM=7 go build -a \
         github.com/mattn/goreman
 
 
+# Final image
+FROM resin/rpi-raspbian
+
+# less priviledge user, the id should map the user the downloaded files belongs to
+RUN groupadd -r aria && useradd -m -r -g aria aria -u 1000
+
+RUN apt-get update \
+        && apt-get install -y \
+        libxml2 libsqlite3-0 \
+        libc-ares2 zlib1g \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+COPY . /webui-aria2
+
+COPY --from=aria2_builder /usr/bin/aria2c /usr/bin/aria2c
+COPY --from=aria2_builder /usr/local/bin/gosu /usr/local/bin/gosu
+COPY --from=goreman_builder /usr/local/bin/goreman /usr/local/bin/goreman
 
 # goreman setup
 RUN echo "web: gosu aria /bin/busybox httpd -f -p 8080 -h /webui-aria2\nbackend: gosu aria bash -c 'shopt -s dotglob nullglob && /usr/bin/aria2c --dir=/data/downloads/ --conf-path=/home/aria/.aria2/aria2.conf /data/downloads/*.torrent'" > Procfile
@@ -49,7 +67,6 @@ VOLUME /home/aria/.aria2
 
 # aria2 RPC port, map as-is or reconfigure webui
 EXPOSE 6800/tcp
-
 # webui static content web server, map wherever is convenient
 EXPOSE 8080/tcp
 
