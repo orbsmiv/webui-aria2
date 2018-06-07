@@ -28,14 +28,16 @@ RUN GITHUB_REPO="https://github.com/tianon/gosu" \
   && curl -L $GITHUB_REPO"/releases/download/"$LATEST"/gosu-armhf" > /usr/local/bin/gosu \
   && chmod +x /usr/local/bin/gosu
 
-# goreman install
-RUN curl -L "https://storage.googleapis.com/golang/go1.9.1.linux-armv6l.tar.gz" > go.tar.gz \
-  && tar -xzf go.tar.gz -C /usr/local \
-  && export GOROOT="/usr/local/go" && export GOPATH=`pwd` \
-  && $GOROOT/bin/go get github.com/mattn/goreman && $GOROOT/bin/go build -o /usr/local/bin/goreman github.com/mattn/goreman \
-  && apt-get remove --purge --auto-remove git \
-  && rm go.tar.gz && rm -rf $GOROOT && rm -rf $GOPATH/src && rm -rf $GOPATH/pkg \
-  && unset GOROOT && unset GOPATH
+# goreman build
+FROM golang:1.10-alpine as goreman_builder
+
+RUN apk add --no-cache --update git
+RUN go get -v -u github.com/mattn/goreman
+RUN GOOS=linux GOARCH=arm GOARM=7 go build -a \
+        -o /usr/local/bin/goreman \
+        github.com/mattn/goreman
+
+
 
 # goreman setup
 RUN echo "web: gosu aria /bin/busybox httpd -f -p 8080 -h /webui-aria2\nbackend: gosu aria bash -c 'shopt -s dotglob nullglob && /usr/bin/aria2c --dir=/data/downloads/ --conf-path=/home/aria/.aria2/aria2.conf /data/downloads/*.torrent'" > Procfile
