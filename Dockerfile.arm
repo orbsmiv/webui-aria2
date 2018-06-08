@@ -45,7 +45,7 @@ FROM resin/armv7hf-debian:stretch
 RUN groupadd -r aria && useradd -m -r -g aria aria -u 1000
 
 RUN apt-get update \
-        && apt-get install -y \
+        && apt-get install -y --no-install-recommends \
         libxml2 libsqlite3-0 \
         libc-ares2 zlib1g \
         busybox \
