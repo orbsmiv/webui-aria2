@@ -1,4 +1,4 @@
-FROM resin/rpi-raspbian AS aria2_builder
+FROM resin/armv7hf-debian:stretch AS aria2_builder
 
 ARG ARIA2_VERSION="1.32.0"
 
@@ -39,7 +39,7 @@ RUN GOOS=linux GOARCH=arm GOARM=7 go build -a \
 
 
 # Final image
-FROM resin/rpi-raspbian
+FROM resin/armv7hf-debian:stretch
 
 # less priviledge user, the id should map the user the downloaded files belongs to
 RUN groupadd -r aria && useradd -m -r -g aria aria -u 1000
